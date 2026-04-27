@@ -1,4 +1,5 @@
 const { PrismaClient } = require("@prisma/client");
+const bcrypt = require("bcrypt");
 const prisma = new PrismaClient();
 
 const seedquestions = [
@@ -21,18 +22,29 @@ const seedquestions = [
 ];
 
 async function main() {
-  await prisma.question.deleteMany();
+  const hashedPassword = await bcrypt.hash("1234", 10);
+  const user = await prisma.user.create({
+    data: {
+      email: "admin@example.com",
+      password: hashedPassword,
+      name: "Admin User",
+    },
+  });
+
+  console.log("Created user:", user.email);
+
 
   for (const question of seedquestions) {
     await prisma.question.create({
       data: {
         question: question.question,
         answer: question.answer,
+        userId: user.id
       },
     });
   }
 
-  console.log("Seed data inserted successfully");
+  console.log("Seeded 4 questions");
 }
 
 main()
